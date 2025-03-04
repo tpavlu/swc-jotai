@@ -5,15 +5,16 @@ use swc_core::{
     common::{util::take::Take, FileName, SyntaxContext, DUMMY_SP},
     ecma::{
         ast::*,
-        atoms::JsWord,
         utils::{ModuleItemLike, StmtLike},
-        visit::{as_folder, noop_visit_mut_type, Fold, FoldWith, VisitMut, VisitMutWith},
+        visit::{noop_visit_mut_type, Fold, FoldWith, VisitMut, VisitMutWith},
     },
     plugin::{
         metadata::TransformPluginMetadataContextKind, plugin_transform,
         proxies::TransformPluginProgramMetadata,
     },
 };
+
+use swc_atoms::Atom as JsWord;
 
 struct DebugLabelTransformVisitor {
     atom_import_map: AtomImportMap,
@@ -204,8 +205,14 @@ impl VisitMut for DebugLabelTransformVisitor {
     }
 }
 
+impl Fold for DebugLabelTransformVisitor {
+    fn fold_module(&mut self, module: Module) -> Module {
+        module.fold_children_with(self)
+    }
+}
+
 pub fn debug_label(config: Config, file_name: FileName) -> impl Fold {
-    as_folder(DebugLabelTransformVisitor::new(config, file_name))
+    DebugLabelTransformVisitor::new(config, file_name)
 }
 
 #[plugin_transform]
@@ -218,13 +225,12 @@ pub fn debug_label_transform(
             .get_transform_plugin_config()
             .expect("Failed to get plugin config for @swc-jotai/debug-label"),
     );
+    eprintln!("Running @swc-jotai/debug-label transform");
     let file_name = match &metadata.get_context(&TransformPluginMetadataContextKind::Filename) {
         Some(file_name) => FileName::Real(file_name.into()),
         None => FileName::Anon,
     };
-    program.fold_with(&mut as_folder(DebugLabelTransformVisitor::new(
-        config, file_name,
-    )))
+    program.fold_with(&mut DebugLabelTransformVisitor::new(config, file_name))
 }
 
 #[cfg(test)]

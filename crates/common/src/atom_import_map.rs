@@ -1,15 +1,16 @@
 use swc_core::{
-    common::collections::AHashSet,
-    ecma::{ast::*, atoms::JsWord},
+    ecma::{ast::*, atoms::Atom as JsWord},
 };
+
+use std::collections::HashSet;
 
 use crate::ATOM_IMPORTS;
 
 #[derive(Debug)]
 pub struct AtomImportMap {
     atom_names: Vec<JsWord>,
-    imports: AHashSet<JsWord>,
-    namespace_imports: AHashSet<JsWord>,
+    imports: HashSet<JsWord>,
+    namespace_imports: HashSet<JsWord>,
 }
 
 impl AtomImportMap {

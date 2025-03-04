@@ -5,7 +5,7 @@ use swc_core::{
     common::{FileName, SyntaxContext, DUMMY_SP},
     ecma::{
         ast::*,
-        visit::{as_folder, noop_visit_mut_type, Fold, FoldWith, VisitMut, VisitMutWith},
+        visit::{noop_visit_mut_type, Fold, FoldWith, VisitMut, VisitMutWith},
     },
     plugin::{
         metadata::TransformPluginMetadataContextKind, plugin_transform,
@@ -219,8 +219,14 @@ impl VisitMut for ReactRefreshTransformVisitor {
     }
 }
 
+impl Fold for ReactRefreshTransformVisitor {
+    fn fold_module(&mut self, module: Module) -> Module {
+        module.fold_children_with(self)
+    }
+}
+
 pub fn react_refresh(config: Config, file_name: FileName) -> impl Fold {
-    as_folder(ReactRefreshTransformVisitor::new(config, file_name))
+    ReactRefreshTransformVisitor::new(config, file_name)
 }
 
 #[plugin_transform]
@@ -237,9 +243,7 @@ pub fn react_refresh_transform(
         Some(file_name) => FileName::Real(file_name.into()),
         None => FileName::Anon,
     };
-    program.fold_with(&mut as_folder(ReactRefreshTransformVisitor::new(
-        config, file_name,
-    )))
+    program.fold_with(&mut ReactRefreshTransformVisitor::new(config, file_name))
 }
 
 #[cfg(test)]
@@ -372,7 +376,7 @@ const countAtom = globalThis.jotaiAtomCache.get("atoms.ts/countAtom", blah(0));"
         r#"
 import React from "react";
 import { atom } from "jotai";
-import { defaultCount } from "./utils";
+import { defaultCount } from "./utils";
 const countAtom = atom(0);"#,
         r#"
 globalThis.jotaiAtomCache = globalThis.jotaiAtomCache || {
@@ -387,7 +391,7 @@ globalThis.jotaiAtomCache = globalThis.jotaiAtomCache || {
 }
 import React from "react";
 import { atom } from "jotai";
-import { defaultCount } from "./utils";      
+import { defaultCount } from "./utils";      
 const countAtom = globalThis.jotaiAtomCache.get("atoms.ts/countAtom", atom(0));"#
     );
 

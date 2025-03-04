@@ -18,6 +18,7 @@ swc_core = { workspace = true, features = [
   "ecma_visit",
   "ecma_plugin_transform",
 ] }
+swc_atoms.workspace = true
 
 [dev-dependencies]
 swc_core = { workspace = true, features = [

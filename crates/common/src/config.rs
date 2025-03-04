@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use swc_core::ecma::atoms::JsWord;
+use swc_core::ecma::atoms::Atom as JsWord;
 
 /// Static plugin configuration.
 #[derive(Clone, Default, Serialize, Deserialize)]
